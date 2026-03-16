@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firestore Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-icon">🔥</div>
+            <div class="header-text">
+                <h1>Firestore Admin</h1>
+                <p>Advanced Database Manager</p>
+            </div>
+            <div class="header-actions">
+                <button id="view-all-data-btn" class="btn-secondary-outline" title="View All Data in Collection">
+                    <span>View Data</span>
+                </button>
+                <button id="settings-toggle" class="btn-icon" title="Configuration Settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+            </div>
+        </header>
+
+
+        <!-- Configuration / Settings View (Modal Popup) -->
+        <div id="settings-overlay" class="modal-overlay hidden">
+            <section id="settings-view" class="modal-content">
+                <div class="modal-header">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 2rem;">⚙️</span>
+                        <h2>Configuration Settings</h2>
+                    </div>
+                    <button id="close-settings" class="btn-close">&times;</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="firebase-config-input">Firebase Configuration (JSON)</label>
+                    <textarea id="firebase-config-input" placeholder='const firebaseConfig = { ... };' spellcheck="false"></textarea>
+                    <small class="help-text">Paste the config object from your Firebase Console.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="master-collection-input">Collection Names (Comma separated)</label>
+                    <input type="text" id="master-collection-input" placeholder="e.g. system_logs, users" />
+                    <small class="help-text">These names will populate the "Main Collection" dropdown.</small>
+                </div>
+
+                <div class="action-area" style="display: flex; gap: 12px;">
+                    <button id="save-settings-btn" class="btn-primary" style="flex: 2;">Save & Connect</button>
+                    <button id="clear-cache-btn" class="btn-danger" style="flex: 1;">Clear Cache</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Main Form -->
+        <main class="main-content">
+            <!-- Main Collection Selection -->
+            <div class="form-group">
+                <label for="main-collection-select">Main Collection</label>
+                <div class="select-wrapper">
+                    <select id="main-collection-select">
+                        <option value="" disabled selected>Loading...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Document/Category Selection -->
+            <div id="document-group" class="hidden">
+                <div class="form-group">
+                    <div class="label-with-action">
+                        <label for="collection-select">Document</label>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="reset-sub-doc" class="btn-action-small" title="Clear Selection" style="display: none;">
+                                <span>&times;</span>
+                            </button>
+                            <button id="toggle-new-doc" class="btn-action-small" title="Create New Document">
+                                <span class="plus-icon">+</span>
+                                <span class="back-icon hidden">↩</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="sub-doc-select-wrapper" class="select-wrapper">
+                        <select id="collection-select">
+                            <option value="" disabled selected>Loading documents...</option>
+                        </select>
+                    </div>
+                    <!-- Hidden input for new document creation -->
+                    <div id="new-doc-input-wrapper" class="hidden">
+                        <input type="text" id="new-document-id" placeholder="Enter new document name (e.g. lesson_01)" />
+                    </div>
+                    <small class="help-text">Select an existing document or click + to create a new one.</small>
+                </div>
+    
+                <!-- Deep Level: Sub-Collection (Conditional) -->
+                <div id="deep-level-group" class="form-group hidden">
+                    <div class="input-row">
+                        <div style="flex: 1;">
+                            <label for="sub-collection-id">Sub-Collection</label>
+                            <input type="text" id="sub-collection-id" placeholder="e.g. data" />
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="deep-doc-id">Document ID</label>
+                            <input type="text" id="deep-doc-id" placeholder="e.g. record_1" />
+                        </div>
+                    </div>
+                    <small class="help-text">Structure: Collection > Document > [Sub-Collection] > [Document ID]</small>
+                </div>
+            </div>
+
+            <!-- JSON Input -->
+            <div id="json-group" class="hidden">
+                <div class="form-group">
+                    <label for="json-input">Paste JSON Data</label>
+                    <div id="json-error" class="error-message"></div>
+                    <textarea id="json-input" placeholder='{
+   "key": "value",
+   "key": "value",
+   "key": "value",
+}' spellcheck="false"></textarea>
+                </div>
+            </div>
+
+            <!-- Action Area -->
+            <div id="save-group" class="action-area hidden">
+                <button id="save-btn" class="btn-primary">
+                    <span class="btn-text">Save to Firestore</span>
+                    <span class="loader hidden"></span>
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Main Logic -->
+    <script type="module" src="app.js"></script>
+    <!-- Full Data Viewer Modal -->
+    <div id="data-modal-overlay" class="modal-overlay hidden">
+        <section id="data-viewer-modal" class="modal-content data-modal">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 2rem;">🔍</span>
+                    <div>
+                        <h2 id="data-modal-title">Collection Data</h2>
+                        <p id="data-modal-subtitle" style="font-size: 0.8rem; opacity: 0.6;"></p>
+                    </div>
+                </div>
+                <button id="close-data-modal" class="btn-close">&times;</button>
+            </div>
+
+            <div id="full-tree-container" class="tree-container" style="flex: 1; margin-top: 1rem; max-height: 70vh;">
+                <div class="empty-tree-msg">Loading comprehensive collection data...</div>
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>
